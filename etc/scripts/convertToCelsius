@@ -1,0 +1,12 @@
+#!/bin/bash
+
+solids=$(sed -ne 's/^ *solids[^(]*( \(.*\) );$/\1/p' system/includeDict)
+fluids=$(sed -ne 's/^ *fluids[^(]*( \(.*\) );$/\1/p' system/includeDict)
+
+for region in $solids $fluids; do
+    foamCalc addSubtract T subtract -value 273.15 -region $region \
+        -latestTime -resultName Temperature 2>&1 > logs/foamCalc.$region.logfile
+done
+
+
+# ----------------------------------------------------------------- end-of-file

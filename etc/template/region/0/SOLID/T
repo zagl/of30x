@@ -1,0 +1,67 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include        "./system/includeDict"
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform $:config.temperature.start;
+
+boundaryField
+{
+    ".*"
+    {
+        type        zeroGradient;
+        value       $internalField;
+    }
+
+    coupledWall
+    {
+        type        compressible::turbulentTemperatureCoupledBaffleMixed;
+        Tnbr        T;
+        kappa       $:config.solids.SOLID.kappa;
+        kappaName   none;
+        value       $internalField;
+    }
+
+    coupledRadiationWall
+    {
+        type        compressible::turbulentTemperatureRadCoupledMixed;
+        Tnbr        T;
+        kappa       $:config.solids.SOLID.kappa;
+        kappaName   none;
+        Qr          none;
+        QrNbr       Qr;
+        value       $internalField;
+    }
+
+    fixedWall
+    {
+         type       externalWallRadHeatFluxTemperature;
+         kappa      $:config.solids.SOLID.kappa;
+         kappaName  none;
+         h          uniform $:config.convection.h;
+         emissivity uniform $:config.solids.SOLID.emissivity;
+         Ta         $internalField;
+         value      $internalField;
+    }
+
+    $:config.boundaryFields.T.SOLID
+}
+
+#remove config;
+
+// ************************************************************************* //

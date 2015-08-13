@@ -1,0 +1,91 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       dictionary;
+    location    "system";
+    object      geometryDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+boundingBox     2 ( ( -0.0008 -0.0125 -0.0125 ) ( 0.0026 0.0125 0.0125 ) );
+
+solids
+{
+    platine
+    {
+        elementLength   0.0008;
+        conductivity    210;
+        emissivity      0.8;
+        power           0;
+    }
+    ledc
+    {
+        elementLength   0.0008;
+        conductivity    210;
+        emissivity      0.8;
+        power           0;
+    }
+    ledj
+    {
+        elementLength   0.0008;
+        conductivity    210;
+        emissivity      0.8;
+        power           1;
+    }
+}
+
+blanks
+{
+}
+
+baffles
+{
+}
+
+rotations
+{
+}
+
+refinements
+{
+}
+
+contacts
+{
+    isolations
+    {
+        pairs           ( ( ledj FLUID ) );
+    }
+    resistances
+    {
+        pairs           ( ( ledj platine ) ( ledj ledc ) );
+        resistances     ( 7 9 );
+    }
+    thermalLayers
+    {
+        pairs           ( );
+        thicknessLayers ( );
+        kappaLayers     ( );
+    }
+}
+
+fluids
+{
+    FLUID
+    {
+        insidePoints    ( );
+        rotations       ( );
+        baffles         ( );
+    }
+}
+
+
+// ************************************************************************* //

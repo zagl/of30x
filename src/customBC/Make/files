@@ -1,0 +1,4 @@
+externalWallRadHeatFluxTemperature/externalWallRadHeatFluxTemperatureFvPatchScalarField.C
+thermalResistanceCoupledBaffleMixed/thermalResistanceCoupledBaffleMixedFvPatchScalarField.C
+
+LIB = $(FOAM_USER_LIBBIN)/customBC

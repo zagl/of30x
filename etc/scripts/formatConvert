@@ -1,0 +1,10 @@
+#!/bin/bash
+
+solids=$(sed -ne 's/^ *solids[^(]*( \(.*\) );$/\1/p' system/includeDict)
+fluids=$(sed -ne 's/^ *fluids[^(]*( \(.*\) );$/\1/p' system/includeDict)
+
+for region in $solids $fluids; do
+    foamFormatConvert -latestTime -region $region
+done
+
+# ----------------------------------------------------------------- end-of-file

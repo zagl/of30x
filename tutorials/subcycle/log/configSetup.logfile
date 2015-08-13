@@ -1,0 +1,42 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : 2.3.x-8199b97e4a7a
+Exec   : configSetup
+Date   : Mar 26 2014
+Time   : 16:28:03
+Host   : "thermo"
+PID    : 5280
+Case   : /home/isack/OpenFOAM/of23x/tutorials/subcycle
+nProcs : 1
+sigFpe : Enabling floating point exception trapping (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+--> FOAM Warning : 
+    From function dlOpen(const fileName&, const bool)
+    in file POSIX.C at line 1179
+    dlopen error : /home/isack/OpenFOAM/isack-2.3.x/platforms/linux64GccDPOpt/lib/myturbulentTemperatureCoupledBaffleMixedFvPatchScalarField.so: undefined symbol: _ZN4Foam9NamedEnumINS_22temperatureCoupledBase11KMethodTypeELi4EE5namesE
+--> FOAM Warning : 
+    From function dlLibraryTable::open(const fileName&, const bool)
+    in file db/dynamicLibrary/dlLibraryTable/dlLibraryTable.C at line 99
+    could not load "myturbulentTemperatureCoupledBaffleMixedFvPatchScalarField.so"
+Reading surface from "platine.obj" ...
+Reading surface from "ledj.obj" ...
+Reading surface from "ledc.obj" ...
+
+Bounding Box: (-0.0008 -0.0125 -0.0125) (0.0026 0.0125 0.0125)
+
+Remove plate from dictionary
+
+Write geometryDict ...
+
+End
+

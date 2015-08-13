@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+    echo "Usage: $(basename $0) SOURCE_CASE TARGET_CASE" >&2
+    echo "" >&2
+    exit 1
+fi
+
+src=$1
+tgt=$2
+
+
+cd $src
+latestTime=$(ls -d1 [0-9]* | sort -n | tail -1)
+cd -
+
+mkdir -p $tgt/{0,constant,logs}
+cp -r $src/constant/{triS*,regionP*} $tgt/constant/
+cp -r $src/system $tgt
+cp -r $src/$latestTime/* $tgt/constant/

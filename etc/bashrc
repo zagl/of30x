@@ -1,0 +1,69 @@
+#!/bin/bash
+
+function of23x
+{
+    . $HOME/OpenFOAM/OpenFOAM-2.3.x/etc/bashrc WM_NCOMPPROCS=4 WM_MPLIB=SYSTEMOPENMPI
+    . $WM_PROJECT_DIR/bin/tools/RunFunctions
+    PATH=$PATH:$HOME/OpenFOAM/scripts
+}
+
+function of24x
+{
+    . $HOME/OpenFOAM/OpenFOAM-2.4.x/etc/bashrc WM_NCOMPPROCS=4 WM_MPLIB=SYSTEMOPENMPI
+    . $WM_PROJECT_DIR/bin/tools/RunFunctions
+    PATH=$PATH:$HOME/OpenFOAM/scripts
+}
+
+runApp()
+{
+    APP_RUN=$1
+    APP_NAME=${1##*/}
+    shift
+
+    mkdir -p logs
+    
+    echo "Running $APP_RUN on $PWD"
+    $APP_RUN "$@" > logs/$APP_NAME.log 2>&1
+}
+
+alias of='of23x'
+
+alias blockMesh='runApp blockMesh -dict system/blockMeshDict'
+alias castMesh='runApp snappyHexMesh -dict system/preSnappyHexMeshDict'
+alias thinWalls='runApp thinWalls'
+alias snapMesh='runApp snappyHexMesh'
+alias preSplit='runApp splitMeshRegions -cellZones -makeCellZones'
+alias postSplit='runApp splitMeshRegions -cellZonesOnly'
+alias modifyRegions='runApp modifyRegions'
+alias cht='runApp chtMultiRegionSimpleFoam'
+
+alias bm='blockMesh'
+alias cm='castMesh'
+alias tw='thinWalls'
+alias sm='snapMesh'
+alias pes='preSplit'
+alias pos='postSplit'
+alias mr='modifyRegions'
+
+function meshAll
+{
+    bm
+    cm
+    sm
+    pes
+    mr
+    subsetMesh cavities
+    pos
+}
+
+
+alias cd..='cd ..'
+alias cd...='cd ../..'
+alias cd....='cd ../../..'
+alias cd.....='cd ../../../..'
+alias cd......='cd ../../../../..'
+alias cd.......='cd ../../../../../..'
+alias cd........='cd ../../../../../../..'
+alias cd.........='cd ../../../../../../../..'
+alias cd..........='cd ../../../../../../../../..'
+alias cd...........='cd ../../../../../../../../../..'

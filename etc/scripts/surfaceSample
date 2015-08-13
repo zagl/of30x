@@ -1,0 +1,56 @@
+#!/bin/bash
+
+createVTK()
+{
+    awk '
+    function abs(value)
+    {
+        return (value<0 ? -value : value);
+    }
+    BEGIN {
+        print "# vtk DataFile Version 2.0"
+        print "'$region'"
+        print "ASCII"
+        print "DATASET POLYDATA"
+        lastValue = -5000
+    }
+    /^v/ {
+        points[nPoints++] = $2 " " $3 " " $4
+    }
+    /^f/ {
+        faces[nFaces++] = "3 " $2-1 " " $3-1 " " $4-1
+    }
+    /^[0-9-]/ {
+        value = $4
+            values[nValues++] = value  
+    }
+    END {
+        print "POINTS", nPoints, "float"
+        for ( i=0; i<nPoints; i++  )
+            print points[i]
+        print "POLYGONS", nFaces, nFaces*4
+        for ( i=0; i<nFaces; i++  )
+            print faces[i]
+        print "POINT_DATA", nPoints
+        print "FIELD attributes 1"
+        print "Temperature 1", nPoints, "float"
+        for ( i=0; i<nValues; i++  )
+        {
+            printf "%s ", values[i]
+            if ( (i+1)%10 == 0 )
+                print "\n"
+        }
+    }
+    ' postProcessing/sets/${region}/${latestTime}/sample_Temperature.xy constant/triSurface/${region}F.obj > ${region}.vtk
+}
+
+solids=$(sed -ne 's/^ *solids[^(]*( \(.*\) );$/\1/p' system/includeDict)
+latestTime=$(ls -d1 [0-9]*[0-9] | sort -n | tail -1)
+
+mkdir -p postProcessing
+
+for region in $solids; do
+    surfaceRefine constant/triSurface/${region}.* constant/triSurface/${region}F.obj 0.004
+    sample -region ${region} -time $latestTime -dict system/surfaceSampleDict
+    createVTK
+done

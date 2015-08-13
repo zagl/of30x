@@ -1,0 +1,81 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      T;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include        "./system/includeDict"
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform $:config.temperature.start;
+
+boundaryField
+{
+    ".*"
+    {
+        type        zeroGradient;
+        value       $internalField;
+    }
+
+    outlet
+    {
+        type        inletOutlet;
+        inletValue  $internalField;
+        value       $internalField;
+    }
+
+    ceiling
+    {
+        type        inletOutlet;
+        inletValue  $internalField;
+        value       $internalField;
+    }
+
+    open
+    {
+        type        inletOutlet;
+        inletValue  $internalField;
+        value       $internalField;
+    }
+
+    inlet
+    {
+        type        fixedValue;
+        value       $:config.inlet.temperature;
+    }
+
+    coupledWall
+    {
+        type        compressible::turbulentTemperatureCoupledBaffleMixed;
+        Tnbr        T;
+        kappa       fluidThermo;
+        kappaName   none;
+        value       $internalField;
+    }
+
+    coupledRadiationWall
+    {
+        type        compressible::turbulentTemperatureRadCoupledMixed;
+        Tnbr        T;
+        kappa       fluidThermo;
+        kappaName   none;
+        Qr          Qr;
+        QrNbr       none;
+        value       $internalField; 
+    }
+}
+
+#remove config;
+
+// ************************************************************************* //

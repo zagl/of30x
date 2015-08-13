@@ -1,0 +1,36 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # run from this directory
+
+runApp()
+{
+    APP_RUN=$1
+    APP_NAME=${1##*/}
+    shift
+
+    echo "Running $APP_RUN on $PWD"
+    $APP_RUN "$@" > log/$APP_NAME.log 2>&1
+}
+
+mkdir log 2> /dev/null
+cp bak/* .
+
+runApp caseInit
+runApp createInclude
+runApp blockMesh -dict system/blockMeshDict
+runApp snappyHexMesh -overwrite
+runApp splitMeshRegions -overwrite -cellZones -makeCellZones
+runApp modifyRegions
+runApp subsetMesh cavities -overwrite
+runApp splitMeshRegions -overwrite -cellZonesOnly
+runApp caseSetup
+
+runApp topoSet -region FLUID
+#-- Run on single processor
+#runApp chtMultiRegionSimpleFoam
+
+echo
+echo "creating files for paraview post-processing"
+echo
+paraFoam -touchAll
+
+# ----------------------------------------------------------------- end-of-file

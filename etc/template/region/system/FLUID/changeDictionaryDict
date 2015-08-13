@@ -1,0 +1,48 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      changeDictionaryDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "./system/includeDict"
+
+dictionaryReplacement
+{
+    boundary
+    {
+        "oldInternalFaces"
+        {
+            type            wall;
+        }
+
+        "F.*"
+        {
+            type            mappedWall;
+            inGroups        ($:config.changeDictionary.coupledWallGroup);
+        }
+
+        "(min|max)."
+        {
+            type            $:config.changeDictionary.exteriorWallType;
+            inGroups        ( $:config.changeDictionary.exteriorWallGroup );
+        }
+
+        $:config.changeDictionary.global
+
+        $:config.changeDictionary.regions.FLUID
+    }
+}
+
+#remove config;
+
+// ************************************************************************* //

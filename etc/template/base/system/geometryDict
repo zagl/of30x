@@ -1,0 +1,72 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       dictionary;
+    location    "system";
+    object      geometryDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+boundingBox     ( ( 0 0 0 ) ( 1 1 1 ) );
+
+solids
+{
+}
+
+blanks
+{
+}
+
+baffles
+{
+}
+
+rotations
+{
+}
+
+refinements
+{
+}
+
+contacts
+{
+    isolations
+    {
+        pairs           ( );
+    }
+    resistances
+    {
+        pairs           ( );
+        resistances     ( );
+    }
+    thermalLayers
+    {
+        pairs           ( );
+        thicknessLayers ( );
+        kappaLayers     ( );
+    }
+}
+
+fluids
+{
+    FLUID
+    {
+        convection      calculated;
+        insidePoints    ( );
+        rotations       ( );
+        baffles         ( );
+    }
+}
+
+
+
+// ************************************************************************* //

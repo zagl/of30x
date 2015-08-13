@@ -1,0 +1,63 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.2.2                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      changeDictionaryDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dictionaryReplacement
+{
+    boundary
+    {
+        maxX
+        {
+            type            patch;
+        }
+    }
+
+    T
+    {
+        internalField   uniform 300;
+
+        boundaryField
+        {
+            ".*"
+            {
+                type            zeroGradient;
+                value           uniform 300;
+            }
+            "rightSolid_to_.*"
+            {
+                type            compressible::myturbulentTemperatureCoupledBaffleMixed;
+                Tnbr            T;
+                kappa           solidThermo;
+                kappaName       none;
+//                kappaLayers     (100); 
+//                thicknessLayers (.1);
+                resistance      10;
+                value           uniform 300;
+            }
+//            maxX
+//             {
+//                type            compressible::turbulentHeatFluxTemperature;
+//                heatSource      power; // power [W]; flux [W/m2]
+//                q               uniform 1; // heat power or flux
+//                kappa           solidThermo; // calculate kappa=alphaEff*thermo.Cp
+//                kappaName       none;
+//                Qr              none; // name of the radiative flux
+//                value           uniform 300; // initial temperature value
+//            }
+        }
+    }
+}
+
+// ************************************************************************* //

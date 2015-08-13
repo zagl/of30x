@@ -1,0 +1,116 @@
+#!/bin/bash
+# Skript: caseSetup
+
+# Globale Variablen
+SCRIPTNAME=$(basename $0 .sh)
+EXIT_SUCCESS=0
+EXIT_FAILURE=1
+EXIT_ERROR=2
+EXIT_BUG=10
+TEMPLATE=$HOME/OpenFOAM/template/base
+
+# Variablen für Optionsschalter hier mit Default-Werten vorbelegen
+VERBOSE=n
+TOMM=false
+OPTFILE=""
+
+if [ ! $FOAM_APP ] ; then
+    echo "OpenFOAM environment not found." >&2
+    echo "" >&2
+    exit $EXIT_FAILURE
+fi
+
+if [ ! $TEMPLATE ] ; then
+    echo "Template folder not found." >&2
+    echo "" >&2
+    exit $EXIT_FAILURE
+fi
+
+function usage {
+    echo "" >&2
+    echo "Usage: $SCRIPTNAME [-h] [-m]" >&2
+    echo "options:" >&2
+    echo "   -h   print this usage" >&2
+    echo "   -m   convert to mm" >&2
+    echo "" >&2
+    [[ $# -eq 1 ]] && exit $1 || exit $EXIT_FAILURE
+}
+
+while getopts ':hm' OPTION ; do
+    case $OPTION in
+    m) TOMM=true
+    ;;
+    h) usage $EXIT_SUCCESS
+    ;;
+    \?) echo "Unbekannte Option \"-$OPTARG\"." >&2
+    usage $EXIT_ERROR
+    ;;
+    :) echo "Option \"-$OPTARG\" benötigt ein Argument." >&2
+    usage $EXIT_ERROR
+    ;;
+    *) echo "Dies kann eigentlich gar nicht passiert sein..." >&2
+    usage $EXIT_BUG
+    ;;
+    esac
+done
+
+
+for dir in 0 logs constant system ; do
+    if [ ! -d $dir ] ; then
+        echo "Create new $dir directory"
+        if [ $dir = "0" -o $dir = "logs" ]; then
+            mkdir $dir
+        else
+            cp -r $TEMPLATE/$dir $dir
+        fi
+    fi
+done
+
+for file in *.wrl ; do
+    if [ -e $file ]; then
+        vrml2stl.py $file
+        
+        newfile=$(basename $file .wrl).stl
+        
+        if [ -e $newFile ] ; then
+            rm $file
+        else
+            echo "" >&2
+            echo "Conversion of $file failed." >&2
+            echo "" >&2
+            exit $EXIT_ERROR
+        fi
+    fi
+done
+
+for file in *.{stl,obj,vtk}{,.gz} ; do
+    rename 'y/A-Z/a-z/' $file
+done
+
+for file in *.{stl,obj,vtk}{,.gz} ; do
+    test -e $file || continue    
+    newFile=constant/triSurface/${file%%.*}.obj
+    if $TOMM; then
+        echo "Scale and move $file"
+        surfaceTransformPoints -scale '(0.001 0.001 0.001)' \
+            $file $newFile > logs/surfaceTransformPoints.$file.logfile
+    else
+        echo "Move $file"
+        surfaceConvert $file $newFile > logs/surfaceConvert.$file.logfile
+    fi
+
+    if [ -e $newFile ] ; then
+        rm $file
+        #gzip $newFile
+    else
+        echo "" >&2
+        echo "Conversion of $file failed." >&2
+        echo "" >&2
+        exit $EXIT_ERROR
+    fi
+done
+
+echo "Run configSetup"
+configSetup > logs/configSetup.logfile
+
+exit $EXIT_SUCCESS

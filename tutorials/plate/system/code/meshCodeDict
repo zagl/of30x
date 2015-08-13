@@ -1,0 +1,289 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      configCode;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "./system/configDict";
+
+#codeStream
+{
+
+    codeOptions
+    #{
+        -I$(LIB_SRC)/meshTools/lnInclude
+    #};
+
+    codeLibs
+    #{
+        -lmeshTools
+    #};
+
+    codeInclude
+    #{
+        #include "vectorField.H"
+        #include "IFstream.H"
+        #include "Tuple2.H"
+        #include "Time.H"
+        #include "argList.H"
+        #include "cellSet.H"
+        #include "HashTable.H"
+    #};
+
+    localCode
+    #{
+    #};
+
+    code
+    #{
+
+
+/*---------------------------------------------------------------------------*\
+                                    blockMesh
+\*---------------------------------------------------------------------------*/
+dictionary configDict = dict.subDict("config");
+scalar globalLength  = readScalar(configDict.lookup("elementLength"));
+scalar elementGradient = readScalar(configDict.lookup("elementGradient"));
+vectorField boundingBox = configDict.lookup("boundingBox");
+vectorField distance = configDict.lookup("fluidDistance");
+
+vectorField l(4);
+vectorField divisions(3);
+vectorField edgeGradient(3);
+for ( int i=0; i<3; i++ )
+{
+    l[0][i] = boundingBox[0][i] - distance[0][i];
+    l[1][i] = boundingBox[0][i];
+    l[2][i] = boundingBox[1][i];
+    l[3][i] = boundingBox[1][i] + distance[1][i];
+
+    divisions[0][i] = int(log((distance[0][i])/globalLength
+        * (elementGradient - 1) + 1)/log(elementGradient ) + 0.5);
+
+    divisions[1][i] = int((boundingBox[1][i] - boundingBox[0][i])
+        / globalLength  + 0.5);
+
+    divisions[2][i] = int(log((distance[1][i])/globalLength 
+        * (elementGradient - 1) + 1)/log(elementGradient ) + 0.5);
+
+    edgeGradient[0][i] = 1/pow(elementGradient, divisions[0][i]-1);
+    edgeGradient[1][i] = 1;
+    edgeGradient[2][i] = pow(elementGradient, divisions[2][i]-1);
+}
+
+vectorField vertices;
+for ( int k=0; k<4; k++ )
+{
+    for ( int j=0; j<4; j++ )
+    {
+        for ( int i=0; i<4; i++ )
+        {
+            vector p(l[i].x(), l[j].y(), l[k].z());
+            vertices.append(p);
+        }
+    }
+}
+
+wordList blocks;
+for ( int k=0; k<3; k++ )
+{
+    for ( int j=0; j<3; j++ )
+    {
+        for ( int i=0; i<3; i++ )
+        {
+            labelList corners(8);
+            for ( int n=0; n<8; n++ )
+            {
+                label corner = i+((n+1)>>1&1) + 4*(j+(n>>1&1))
+                    + 16*(k+(n>>2));
+                corners[n] = corner;
+            }
+            vector division
+            (
+                divisions[i].x(),
+                divisions[j].y(),
+                divisions[k].z()
+            );
+            vector gradient
+            (
+                edgeGradient[i].x(),
+                edgeGradient[j].y(),
+                edgeGradient[k].z()
+            );
+
+            OStringStream block;
+            block << "hex " << corners << division 
+                << " simpleGrading " << gradient;
+            blocks.append(block.str());
+        }
+    }
+}
+
+dictionary blockMesh;
+blockMesh.add("blocks", blocks);
+blockMesh.add("vertices", vertices);
+
+dictionary config;
+config.add("blockMesh", blockMesh);
+
+
+/*---------------------------------------------------------------------------*\
+                                  snappyHexMesh
+\*---------------------------------------------------------------------------*/
+
+dictionary snappyHexMesh;
+dictionary geometry;
+dictionary refinementSurfaces;
+dictionary refinementRegions;
+
+fileName constantDir("constant");
+fileName triSurfaceDir(constantDir/"triSurface");
+fileNameList triSurfaces = readDir(triSurfaceDir);
+HashTable<word> surfFileNames;
+forAll( triSurfaces, surfI )
+{
+    surfFileNames.insert( triSurfaces[surfI].lessExt(), triSurfaces[surfI] );
+}
+
+wordList geomTypes
+(
+    IStringStream("(solids blanks baffles rotations refinements)")()
+);
+
+forAll( geomTypes, i )
+{
+    word geomType = geomTypes[i];
+    forAllConstIter(dictionary, configDict.subDict(geomType), iter)
+    {
+        const dictionary& dict = iter().dict();
+        word name = iter().keyword();
+        
+        dictionary geomDict;
+        geomDict.add("name", name);
+        geomDict.add("type", "triSurfaceMesh");
+        geometry.add(surfFileNames[name], geomDict);
+        
+        scalar localLength = readScalar(dict.lookup("elementLength"));
+        label refinementLevel = int(log(globalLength/localLength) / log(2.0) + 0.5);
+        
+        if ( geomType == "refinements" )
+        {
+            dictionary region;
+            List<Tuple2<label, scalar> > levels(1);
+            levels[0] = Tuple2<label, scalar>(1.0, refinementLevel);
+            region.add("levels", levels);
+            region.add("mode", "inside");
+            refinementRegions.add(name, region);
+        }
+        else
+        {
+            dictionary surface;
+            labelList level(2, refinementLevel);
+            surface.add("level", level);
+            if ( geomType == "solids" )
+            {
+                surface.add("cellZone", name);
+                surface.add("faceZone", name);
+                surface.add("cellZoneInside", "inside");
+            }
+            else if ( geomType == "baffles" )
+            {
+                surface.add("faceZone", name);
+            }
+            refinementSurfaces.add(name, surface);
+        }
+    }
+}
+
+vector locationInMesh = boundingBox[0] + vector(0.00001, 0.00001, 0.00001);
+
+snappyHexMesh.add("geometry", geometry);
+snappyHexMesh.add("refinementSurfaces", refinementSurfaces);
+snappyHexMesh.add("refinementRegions", refinementRegions);
+snappyHexMesh.add("locationInMesh", locationInMesh);
+config.add("snappyHexMesh", snappyHexMesh);
+
+
+/*---------------------------------------------------------------------------*\
+                               changeDictionary
+\*---------------------------------------------------------------------------*/
+
+dictionary changeDictionary;
+
+word radiation = configDict.subDict("radiation").lookup("model");
+word coupledWallType =
+    radiation == "none" ? "coupledWall" : "coupledRadiationWall";
+changeDictionary.add("coupledWallType", coupledWallType);
+
+
+vector gravity = configDict.lookup("gravity");
+word outlet = "noOutlet";
+const char* componentNames[] = {"X", "Y", "Z"};
+forAll( gravity, i )
+{
+    if (gravity[i] < 0)
+    {
+        outlet = "max" + word(componentNames[i]);
+    }
+    else if (gravity[i] > 0)
+    {
+        outlet = "min" + word(componentNames[i]);
+    }
+}
+changeDictionary.add("outlet", outlet);
+
+
+config.add("changeDictionary", changeDictionary);
+
+/*---------------------------------------------------------------------------*\
+                                   fvOptions
+\*---------------------------------------------------------------------------*/
+
+dictionary fvOptions;
+const dictionary& rotationsDict = configDict.subDict("rotations");
+
+forAllConstIter(dictionary, rotationsDict, iter)
+{
+    const dictionary& dict = iter().dict();
+    word name = iter().keyword();
+    scalar rpm = readScalar(dict.lookup("rpm"));
+    vectorField axis = dict.lookup("axis");
+
+    dictionary coeffs;
+    coeffs.add("origin", axis[0]);
+    coeffs.add("axis", axis[1] - axis[0]);
+    coeffs.add("omega", constant::mathematical::twoPi * rpm / 60);
+
+    dictionary option;
+    option.add("active", "on");
+    option.add("selectionMode", "cellZone");
+    option.add("cellZone", name);
+    option.add("type", "MRFSource");
+    option.add("MRFSourceCoeffs", coeffs);
+
+    fvOptions.add(name, option);
+}
+
+config.add("fvOptions", fvOptions);
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+os  << "config" << config;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    #}; // End code
+
+}; // End codeStream
+

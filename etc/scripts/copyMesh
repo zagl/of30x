@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+    echo "Usage: $(basename $0) SOURCE TARGET" >&2
+    echo "" >&2
+    exit 1
+fi
+
+src=$1
+tgt=$2
+
+for folder in $src/*; do
+    region=$(basename $folder)
+    rm -r $tgt/$region
+    cp -r $src/$region $tgt
+done

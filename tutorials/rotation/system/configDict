@@ -1,0 +1,56 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      configDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+config
+{
+    domain
+    {
+        elementLength   0.004;
+        d               0.02;
+        width           ( ( $d $d $d ) ( $d $d $d ) );
+        gradient        1.1;
+    }
+
+    temperature
+    {
+        start           293.15;
+        min             $start;
+        max             500;
+    }
+
+    convection
+    {
+        open            yes;
+        gravity         ( 0 0 -9.81 );
+    }
+
+    inlet
+    {
+        velocity        ( 0 0 0 );
+        temperature     293.15;
+    }
+
+    radiation
+    {
+        model           fvDOM;
+        frequency       20;
+    }
+
+    #include "geometryDict"
+}
+
+// ************************************************************************* //

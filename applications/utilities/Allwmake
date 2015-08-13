@@ -1,0 +1,16 @@
+#!/bin/sh
+
+wmake configSetup
+wmake createInclude
+wmake modifyRegions
+wmake moveCells
+wmake moveMeshPoints
+wmake newModifyRegions
+wmake newMoveCells
+wmake newPinchMesh
+wmake oldModifyRegions
+wmake pinchMesh
+wmake surfaceOffset
+wmake surfaceRefine
+wmake thinWalls
+

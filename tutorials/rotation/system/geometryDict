@@ -1,0 +1,65 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      binary;
+    class       dictionary;
+    location    "system";
+    object      geometryDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+boundingBox     2 ( ( -0.0095 -0.02 -0.02 ) ( 0.021 0.02 0.02 ) );
+
+solids
+{
+    plate
+    {
+        elementLength   0.001;
+        conductivity    210;
+        emissivity      0.8;
+        power           1;
+    }
+}
+
+blanks
+{
+}
+
+baffles
+{
+}
+
+rotations
+{
+    ROT1
+    {
+        elementLength   0.001;
+        radius          0.011;
+        rpm             4500;
+        axis            2 ( ( 0 -0.02 0 ) ( 0 0.02 0 ) );
+    }
+}
+
+refinements
+{
+}
+
+fluids
+{
+    FLUID
+    {
+        insidePoints    ( );
+        rotations       ( );
+        baffles         ( );
+    }
+}
+
+
+// ************************************************************************* //

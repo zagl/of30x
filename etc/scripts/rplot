@@ -1,0 +1,41 @@
+#!/bin/bash
+
+usage() {
+    echo "Usage: $(basename $0) [OPTIONS] LOGFILE [HISTORY]" 2>&1
+    echo "" 2>&1
+    echo "Options:" 2>&1
+    echo "    -h  Print help" 2>&1
+    echo "" 2>&1
+}
+
+if [ "$1" = "-h" ]; then
+    usage
+    exit 0
+elif [ $# -eq "0" ]; then
+    usage
+    exit 1
+elif [ $# -ge "1" ]; then
+    log="$1"
+    lsof -c cht | grep -qs $PWD/$1
+    script='/^Time =/{n++} END{ if('$?'!=0) print n;
+        else if(n<500) print n+500; else print n*2 }'
+    hist=$(awk "$script" "$log")
+    [ "$2" ] && hist=$2
+fi
+
+labels=$(mawk '/^Create fluid/{printf $6" Ux,"$6" Uy,"$6" Uz,"} /^\*/{exit 0}' "$log")
+nSolids=$(mawk '/^Create fluid/{n++} /^\*/{exit 0} END{print n*3}' "$log")
+
+fifo=/tmp/rplot-$(date | md5sum | head -c8)
+mkfifo $fifo
+
+tail -n+1 -f "$log" | mawk -F"[ ,]+" -W interactive \
+    '/U[xzy]/ {print log($8)/log(10)}' > $fifo &
+pipe=$!
+trend $fifo $hist -G 1x100 -gvd -geometry 800x480 \
+    -L"$labels" -c${nSolids}a -t"Residuals in log(x) [0:$hist]"
+
+kill $pipe
+rm $fifo
+
+exit 0

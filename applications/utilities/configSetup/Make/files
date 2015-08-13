@@ -1,0 +1,3 @@
+configSetup.C
+
+EXE = $(FOAM_USER_APPBIN)/configSetup

@@ -1,0 +1,1 @@
+cellShaps points statt points um gegenüberliegende points zu finden.

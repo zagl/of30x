@@ -1,0 +1,99 @@
+#!/bin/bash
+
+
+###############################################################################
+function mergeCellRegions
+###############################################################################
+{
+  rm -f merge.setSet
+  glob="constant/polyMesh/sets/region*"
+  regionSets=$(echo $glob)
+  test "$glob" = "$regionSets" && exit 0
+  
+  for file in $regionSets
+  do
+    region=$(basename $file .gz)
+    for set in $(ls constant/polyMesh/sets/)
+    do
+      echo "$regionSets" | grep -q $set && continue
+      solid=${set%.*}
+        echo "cellSet $region delete zoneToCell $solid" >> merge.setSet
+    done
+  done
+}
+
+###############################################################################
+function setCellRegions
+###############################################################################
+{
+  fluidNr=1
+  cellsRegionExists=false
+  batchfile=batch.setSet
+  
+  nCells=$(zgrep -m1 nCells constant/polyMesh/owner* | 
+            sed -n 's/^.*nCells: *\([0-9]*\).*$/\1/p')
+  minCells=$(( $nCells / 50 ))
+  
+  echo "cellSet cells new" > $batchfile
+  for file in constant/polyMesh/sets/region*
+  do
+    name=$(basename $file .gz)
+    cells=$(zgrep -E -m1 '^[0-9]+$' $file)
+    
+    if [ $cells -ge $minCells ]
+    then
+      fluid=FLUID$fluidNr
+      fluidNr=$(expr $fluidNr + 1)
+      echo "cellSet $fluid new cellToCell $name" >> $batchfile
+      echo "cellZoneSet $fluid new setToCellZone $fluid" >> $batchfile
+    elif [ $cells -ne 0 ]
+    then
+      echo "cellSet cells add cellToCell $name" >> $batchfile
+      cellsRegionExists=true
+    fi
+    echo "cellSet $name remove" >> $batchfile
+    echo "cellZoneSet $name remove" >> $batchfile
+  done
+  echo "cellZoneSet cells new setToCellZone cells" >> $batchfile
+
+
+  if $cellsRegionExists
+  then
+    glob="constant/polyMesh/sets/region*"
+    regionSets=$(echo $glob)
+    test "$glob" = "$regionSets" && exit 0
+  
+    for set in $(ls constant/polyMesh/sets/)
+    do
+      echo "$regionSets" | grep -q $set && continue
+      solid=${set%.*}
+      echo "cellSet cells delete zoneToCell $solid" >> $batchfile
+    done
+    echo "cellSet cells invert" >> $batchfile
+  else
+    echo "cellSet cells remove" >> $batchfile
+  fi
+  
+}
+
+
+###############################################################################
+#function splitRegions
+###############################################################################
+#{
+#  splitMeshRegions -cellZones -makeCellZones -overwrite > log/splitMeshRegions.first.logfile
+
+  mergeCellRegions
+  setSet -batch merge.setSet > log/setSet.merge.logfile
+
+  setCellRegions
+  setSet -batch batch.setSet > log/setSet.regions.logfile
+
+#  subsetMesh cells -overwrite
+  
+#  splitMeshRegions -cellZonesOnly -overwrite > log/splitMeshRegions.final.logfile
+
+#  paraFoam -touchAll
+#}
+
+

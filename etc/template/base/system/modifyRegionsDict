@@ -1,0 +1,38 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "./system/includeDict"
+
+// Put regions with a small number of cells into a separate cellZone.
+cavitiesCellZone    cavities;
+
+invertCavities      true;
+
+// Specify size threshold by number of cells or
+// relative in relation to overall mesh size.
+relativeSize        yes;
+minRegionSize       0.02;
+
+// Identify regions by insidePoints and add to individual cellZones.
+cellZones
+{
+    $:config.modifyRegions.cellZones
+}
+
+#remove config;
+
+// ************************************************************************* //
+

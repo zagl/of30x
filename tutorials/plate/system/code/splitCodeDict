@@ -1,0 +1,127 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.3.0                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      configCode;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#codeStream
+{
+
+    codeOptions
+    #{
+        -I$(LIB_SRC)/meshTools/lnInclude
+    #};
+
+    codeLibs
+    #{
+        -lmeshTools
+    #};
+
+    codeInclude
+    #{
+        #include "vectorField.H"
+        #include "IFstream.H"
+        #include "Tuple2.H"
+        #include "Time.H"
+        #include "argList.H"
+        #include "cellSet.H"
+    #};
+
+    localCode
+    #{
+    #};
+
+    code
+    #{
+
+dictionary config;
+const dictionary& configDict = dict.subDict("config");
+const dictionary& solidsDict = configDict.subDict("solids");
+
+/*---------------------------------------------------------------------------*\
+                                  topoSet
+\*---------------------------------------------------------------------------*/
+
+fileName constantDir("constant");
+fileName setsDir(constantDir/"polyMesh"/"sets");
+fileNameList sets = readDir(setsDir);
+
+List<dictionary> mergeActions;
+
+labelList matches = findStrings("region.*", sets);
+forAllConstIter(dictionary, solidsDict, iter)
+{
+    const dictionary& dict = iter().dict();
+    word name = iter().keyword();
+
+    forAll(matches, matchI)
+    {
+        word region = sets[matches[matchI]].lessExt();
+
+        dictionary action;
+        action.add("name", region);
+        action.add("type", "cellSet");
+        action.add("action", "delete");
+        action.add("source", "zoneToCell");
+        dictionary sourceInfo;
+        sourceInfo.add("name", name);
+        action.add("sourceInfo", sourceInfo);
+        mergeActions.append(action);
+    }
+}
+
+dictionary topoSet;
+topoSet.add("mergeActions", mergeActions);
+
+
+/*---------------------------------------------------------------------------*\
+                                  topoSet
+\*---------------------------------------------------------------------------*/
+
+List<dictionary> splitActions;
+
+forAllConstIter(dictionary, solidsDict, iter)
+{
+    const dictionary& dict = iter().dict();
+    word name = iter().keyword();
+
+    forAll(matches, matchI)
+    {
+        word region = sets[matches[matchI]].lessExt();
+
+        dictionary action;
+        action.add("name", region);
+        action.add("type", "cellSet");
+        action.add("action", "delete");
+        action.add("source", "zoneToCell");
+        dictionary sourceInfo;
+        sourceInfo.add("name", name);
+        action.add("sourceInfo", sourceInfo);
+        splitActions.append(action);
+    }
+}
+
+topoSet.add("splitActions", splitActions);
+config.add("topoSet", topoSet);
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+os  << "config" << config;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    #}; // End code
+
+}; // End codeStream
+
