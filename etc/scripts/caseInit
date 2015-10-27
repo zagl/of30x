@@ -84,7 +84,9 @@ for file in *.wrl ; do
 done
 
 for file in *.{stl,obj,vtk}{,.gz} ; do
-    rename 'y/A-Z/a-z/' $file
+    if [[ ! $file == FINE* ]]; then
+        rename 'y/A-Z/a-z/' $file
+    fi
 done
 
 for file in *.{stl,obj,vtk}{,.gz} ; do

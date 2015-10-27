@@ -26,7 +26,20 @@ runApp()
     $APP_RUN "$@" > logs/$APP_NAME.log 2>&1
 }
 
-alias of='of23x'
+runAppParallel()
+{
+    APP_RUN=$1
+    APP_NAME=${1##*/}
+    shift
+
+    nProcs=$1
+    shift
+    echo "Running $APP_RUN in parallel on $PWD using $nProcs processes"
+
+    ( mpirun -np $nProcs $APP_RUN -parallel "$@" < /dev/null > logs/$APP_NAME 2>&1 )
+}
+
+alias of='of24x'
 
 alias blockMesh='runApp blockMesh -dict system/blockMeshDict'
 alias castMesh='runApp snappyHexMesh -dict system/preSnappyHexMeshDict'

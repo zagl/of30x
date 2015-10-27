@@ -254,7 +254,9 @@ int main(int argc, char *argv[])
             if (regionSize > minRegionSize)
             {
                 newCellSetName = defaultCellZone;
+                Info<<"jetzt kommts"<< nl;
                 newSets.insert(newCellSetName);
+                Info<<"fertig"<< nl;
             }
 
             forAll( insideCells, i )

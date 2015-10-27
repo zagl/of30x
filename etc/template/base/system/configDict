@@ -28,6 +28,7 @@ config
     temperature
     {
         start           293.15;
+        solid           293.15;
         min             $start;
         max             500;
     }
