@@ -20,13 +20,13 @@ FoamFile
 temperatureLimit
 {
     active          on;
-    selectionMode   all;
-    temperatureLimitsConstraintCoeffs
+    type            limitTemperature;
+    limitTemperatureCoeffs
     {
+        selectionMode      all;
         Tmin            $:config.temperature.min;
         Tmax            $:config.temperature.max;
     }
-    type            temperatureLimitsConstraint;
 }
 
 $:config.fvOptions.SOLID

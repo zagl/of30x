@@ -23,14 +23,14 @@ elif [ $# -ge "1" ]; then
     [ "$2" ] && hist=$2
 fi
 
-labels=$(mawk '/^Create solid/{printf $6" min,"$6" max,"} /^\*/{exit 0}' "$log")
-nSolids=$(mawk '/^Create solid/{n++} /^\*/{exit 0} END{print n*2}' "$log")
+labels=$(mawk '/^Create solid/ || /^Create fluid/ {printf $6" min,"$6" max,"} /^\*/{exit 0}' "$log")
+nSolids=$(mawk '/^Create solid/ || /^Create fluid/ {n++} /^\*/{exit 0} END{print n*2}' "$log")
 
 fifo=/tmp/rplot-$(date | md5sum | head -c8)
 mkfifo $fifo
 
 tail -n+1 -f "$log" | mawk -W interactive \
-    '/^Min\/max T:m/ {print $10-273.15, $19-273.15}' > $fifo &
+    '/^Min\/max T:/ {split($2,a,":"); print a[2]-273.15, $3-273.15}' > $fifo &
 pipe=$!
 trend $fifo $hist -p 5 -G 1x100 -gvd -geometry 800x480 \
     -L"$labels" -c${nSolids}a -t"Temperature in degC [0:$hist]"

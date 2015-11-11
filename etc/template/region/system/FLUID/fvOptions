@@ -20,10 +20,10 @@ FoamFile
 temperatureLimit
 {
     active          on;
-    selectionMode   all;
-    type            temperatureLimitsConstraint;
-    temperatureLimitsConstraintCoeffs
+    type            limitTemperature;
+    limitTemperatureCoeffs
     {
+        selectionMode   all;
         Tmin            $:config.temperature.min;
         Tmax            $:config.temperature.max;
     }

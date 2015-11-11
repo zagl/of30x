@@ -408,10 +408,10 @@ int main(int argc, char *argv[])
             dictionary coeffs;
             coeffs.add("volumeMode", "absolute");
             coeffs.add("injectionRateSuSp", injectionRateSuSp);
+            coeffs.add("selectionMode", "all");
 
             dictionary heatSource;
             heatSource.add("active", "true");
-            heatSource.add("selectionMode", "all");
             heatSource.add("type", "scalarSemiImplicitSource");
             heatSource.add("scalarSemiImplicitSourceCoeffs", coeffs);
             solid.add("heatSource", heatSource);
@@ -431,11 +431,11 @@ int main(int argc, char *argv[])
         coeffs.add("origin", axis[0]);
         coeffs.add("axis", axis[1] - axis[0]);
         coeffs.add("omega", constant::mathematical::twoPi * rpm / 60);
+        coeffs.add("selectionMode", "cellZone");
+        coeffs.add("cellZone", name);
 
         dictionary option;
         option.add("active", "true");
-        option.add("selectionMode", "cellZone");
-        option.add("cellZone", name);
         option.add("type", "MRFSource");
         option.add("MRFSourceCoeffs", coeffs);
 
